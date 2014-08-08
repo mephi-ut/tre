@@ -262,12 +262,7 @@ tre_fill_pmatch(size_t nmatch, regmatch_t pmatch[], int cflags,
 reg_errcode_t
 tre_tnfa_run_parallel(const tre_tnfa_t *tnfa, const void *string, int len,
 		      tre_str_type_t type, int *match_tags, int eflags,
-		      int *match_end_ofs);
-
-reg_errcode_t
-tre_tnfa_run_parallel(const tre_tnfa_t *tnfa, const void *string, int len,
-		      tre_str_type_t type, int *match_tags, int eflags,
-		      int *match_end_ofs);
+		      int *match_end_ofs, int *match_end_eos);
 
 reg_errcode_t
 tre_tnfa_run_backtrack(const tre_tnfa_t *tnfa, const void *string,

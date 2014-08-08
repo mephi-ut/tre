@@ -107,7 +107,7 @@ tre_print_reach(const tre_tnfa_t *tnfa, tre_tnfa_reach_t *reach, int num_tags)
 reg_errcode_t
 tre_tnfa_run_parallel(const tre_tnfa_t *tnfa, const void *string, int len,
 		      tre_str_type_t type, int *match_tags, int eflags,
-		      int *match_end_ofs)
+		      int *match_end_ofs, int *match_end_eos)
 {
   /* State variables required by GET_NEXT_WCHAR. */
   tre_char_t prev_c = 0, next_c = 0;
@@ -132,7 +132,8 @@ tre_tnfa_run_parallel(const tre_tnfa_t *tnfa, const void *string, int len,
   int *tag_i;
   int num_tags, i;
 
-  int match_eo = -1;	   /* end offset of match (-1 if no match found yet) */
+  int match_eos = 0;	   /* reached the of of the input stirng */
+  int match_eo  = -1;	   /* end offset of match (-1 if no match found yet) */
   int new_match = 0;
   int *tmp_tags = NULL;
   int *tmp_iptr;
@@ -330,15 +331,24 @@ tre_tnfa_run_parallel(const tre_tnfa_t *tnfa, const void *string, int len,
 	  if (type == STR_USER)
 	    {
 	      if (str_user_end)
-		break;
+		{
+		  match_eos = 1;
+		  break;
+	        }
 	    }
 	  else if (next_c == L'\0')
-	    break;
+	    {
+	      match_eos = 1;
+	      break;
+	    }
 	}
       else
 	{
 	  if (pos >= len)
-	    break;
+	    {
+	      match_eos = 1;
+	      break;
+	    }
 	}
 
       GET_NEXT_WCHAR();
@@ -495,6 +505,8 @@ tre_tnfa_run_parallel(const tre_tnfa_t *tnfa, const void *string, int len,
 #endif /* !TRE_USE_ALLOCA */
 
   *match_end_ofs = match_eo;
+  *match_end_eos = match_eos;
+
   return match_eo >= 0 ? REG_OK : REG_NOMATCH;
 }
 

@@ -53,11 +53,15 @@ char *alloca ();
    endpoint values. */
 void
 tre_fill_pmatch(size_t nmatch, regmatch_t pmatch[], int cflags,
-		const tre_tnfa_t *tnfa, int *tags, int match_eo)
+		const tre_tnfa_t *tnfa, int *tags, int match_eo,
+		int match_eos)
 {
   tre_submatch_data_t *submatch_data;
   unsigned int i, j;
   int *parents;
+
+  if (nmatch)
+    pmatch[0].eos = match_eos;
 
   i = 0;
   if (match_eo >= 0 && !(cflags & REG_NOSUB))
@@ -139,10 +143,10 @@ tre_have_approx(const regex_t *preg)
 static int
 tre_match(const tre_tnfa_t *tnfa, const void *string, size_t len,
 	  tre_str_type_t type, size_t nmatch, regmatch_t pmatch[],
-	  int eflags)
+	  int eflags, int *eos_p)
 {
   reg_errcode_t status;
-  int *tags = NULL, eo;
+  int *tags = NULL, eo, eos = -1;
   if (tnfa->num_tags > 0 && nmatch > 0)
     {
 #ifdef TRE_USE_ALLOCA
@@ -186,16 +190,18 @@ tre_match(const tre_tnfa_t *tnfa, const void *string, size_t len,
     {
       /* Exact matching, no back references, use the parallel matcher. */
       status = tre_tnfa_run_parallel(tnfa, string, (int)len, type,
-				     tags, eflags, &eo);
+				     tags, eflags, &eo, &eos);
     }
 
   if (status == REG_OK)
     /* A match was found, so fill the submatch registers. */
-    tre_fill_pmatch(nmatch, pmatch, tnfa->cflags, tnfa, tags, eo);
+    tre_fill_pmatch(nmatch, pmatch, tnfa->cflags, tnfa, tags, eo, eos);
 #ifndef TRE_USE_ALLOCA
   if (tags)
     xfree(tags);
 #endif /* !TRE_USE_ALLOCA */
+  if (eos_p != NULL)
+    *eos_p = eos;
   return status;
 }
 
